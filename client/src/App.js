@@ -1,10 +1,13 @@
-import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from './pages/Login';
 
 function App() {
   return (
-    <div>
-      <h1>E-Commerce App</h1>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
