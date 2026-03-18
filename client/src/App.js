@@ -4,12 +4,14 @@ import Register from './pages/Register';
 import Products from './pages/Products';
 import Cart from './pages/Cart';
 import Orders from './pages/Orders';
+import AdminProducts from './pages/AdminProducts';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Products />} />
+        <Route path="/admin/products" element={<AdminProducts />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/cart" element={<Cart />} />

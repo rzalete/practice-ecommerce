@@ -8,6 +8,16 @@ function Products() {
     const [addedId, setAddedId] = useState(null);
     const token = localStorage.getItem('token');
 
+    const getRole = () => {
+        if (!token) return null;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.role;
+        } catch {
+            return null;
+        }
+    };
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -96,6 +106,11 @@ function Products() {
                     <div className="flex gap-6">
                         {token && (
                             <>
+                                {getRole() === 'admin' && (
+                                    <a href="/admin/products" className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide">
+                                        Manage
+                                    </a>
+                                )}
                                 <a href="/cart" className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide">
                                     Cart
                                 </a>
