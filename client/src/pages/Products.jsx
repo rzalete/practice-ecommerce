@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Navbar from '../components/Navbar';
 
 function Products() {
     const [products, setProducts] = useState([]);
@@ -94,45 +95,12 @@ function Products() {
         }
       `}</style>
 
-            <div className="max-w-6xl mx-auto">
-                {/* Header */}
-                <div className="mb-12 flex items-end justify-between border-b border-[#1f1f1f] pb-6">
-                    <div>
-                        <span className="text-xs text-[#737373] tracking-[0.3em] uppercase">store.io</span>
-                        <h1 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-xl font-light text-[#f5f5f5] mt-2">
-                            All Products
-                        </h1>
-                    </div>
-                    <div className="flex gap-6">
-                        {token && (
-                            <>
-                                {getRole() === 'admin' && (
-                                    <a href="/admin/products" className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide">
-                                        Manage
-                                    </a>
-                                )}
-                                <a href="/cart" className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide">
-                                    Cart
-                                </a>
-                                <a href="/orders" className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide">
-                                    Orders
-                                </a>
-                                <button
-                                    onClick={handleSignOut}
-                                    className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide"
-                                >
-                                    Sign out
-                                </button>
-                            </>
-                        )}
-                        {!token && (
-                            <a href="/login" className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide">
-                                Sign in
-                            </a>
-                        )}
-                    </div>
-                </div>
 
+            <Navbar />
+            <div className="max-w-6xl mx-auto mt-10">
+                <h1 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-xl font-light text-[#f5f5f5] mb-10">
+                    All Products
+                </h1>
                 {/* Products Grid */}
                 {products.length === 0 ? (
                     <p className="text-[#737373] text-sm">No products available.</p>
