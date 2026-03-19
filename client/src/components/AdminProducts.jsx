@@ -1,0 +1,170 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const emptyForm = { name: '', description: '', price: '', stock: '', image_url: '' };
+
+function AdminProducts({ token }) {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [formData, setFormData] = useState(emptyForm);
+    const [editingId, setEditingId] = useState(null);
+    const [showForm, setShowForm] = useState(false);
+    const [formError, setFormError] = useState('');
+
+    useEffect(() => { fetchProducts(); }, []);
+
+    const fetchProducts = async () => {
+        try {
+            const res = await axios.get('/api/products');
+            setProducts(res.data);
+        } catch {
+            setError('Failed to load products');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setFormError('');
+        try {
+            if (editingId) {
+                await axios.put(`/api/products/${editingId}`, formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            } else {
+                await axios.post('/api/products', formData, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
+            setFormData(emptyForm);
+            setEditingId(null);
+            setShowForm(false);
+            fetchProducts();
+        } catch (err) {
+            const data = err.response?.data;
+            setFormError(data?.errors?.map(e => e.msg).join(', ') || data?.message || 'Failed to save product');
+        }
+    };
+
+    const handleEdit = (product) => {
+        setFormData({
+            name: product.name,
+            description: product.description || '',
+            price: product.price,
+            stock: product.stock,
+            image_url: product.image_url || ''
+        });
+        setEditingId(product.id);
+        setShowForm(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Delete this product?')) return;
+        try {
+            await axios.delete(`/api/products/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            fetchProducts();
+        } catch {
+            alert('Failed to delete product');
+        }
+    };
+
+    const handleCancel = () => {
+        setFormData(emptyForm);
+        setEditingId(null);
+        setShowForm(false);
+        setFormError('');
+    };
+
+    if (loading) return <p className="text-[#737373] text-sm py-10 text-center">Loading...</p>;
+    if (error) return <p className="text-red-400 text-sm py-10 text-center">{error}</p>;
+
+    return (
+        <>
+            <div className="flex items-center justify-between mb-6">
+                <p className="text-xs text-[#737373]">{products.length} products</p>
+                <button onClick={() => setShowForm(true)}
+                    className="btn-primary px-4 py-2 rounded text-xs font-medium tracking-wide">
+                    + Add product
+                </button>
+            </div>
+
+            {showForm && (
+                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center px-4 z-50">
+                    <div className="bg-[#161616] border border-[#252525] rounded-lg p-6 w-full max-w-md">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-sm font-medium text-[#f5f5f5]">
+                                {editingId ? 'Edit product' : 'Add product'}
+                            </h2>
+                            <button className="text-xs text-[#3a3a3a] hover:text-[#f5f5f5] transition-colors"
+                                onClick={handleCancel}>back</button>
+                        </div>
+                        {formError && (
+                            <div className="mb-4 px-3 py-2 border border-red-900 bg-red-950 rounded text-red-400 text-xs">
+                                {formError}
+                            </div>
+                        )}
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {[
+                                { label: 'Name', name: 'name', type: 'text', placeholder: 'Product name' },
+                                { label: 'Price', name: 'price', type: 'number', placeholder: '0.00' },
+                                { label: 'Stock', name: 'stock', type: 'number', placeholder: '0' },
+                                { label: 'Image URL', name: 'image_url', type: 'text', placeholder: 'https://...' },
+                            ].map(field => (
+                                <div key={field.name}>
+                                    <label className="block text-[#555] text-xs tracking-widest uppercase mb-2">{field.label}</label>
+                                    <input type={field.type} name={field.name} value={formData[field.name]}
+                                        onChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}
+                                        className="input-field w-full rounded px-4 py-2 text-sm"
+                                        placeholder={field.placeholder} />
+                                </div>
+                            ))}
+                            <div>
+                                <label className="block text-[#555] text-xs tracking-widest uppercase mb-2">Description</label>
+                                <textarea name="description" value={formData.description}
+                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                    className="input-field w-full rounded px-4 py-2 text-sm resize-none"
+                                    rows={3} placeholder="Product description" />
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button type="submit" className="btn-primary flex-1 py-2 rounded text-xs font-medium">
+                                    {editingId ? 'Save changes' : 'Add product'}
+                                </button>
+                                <button type="button" onClick={handleCancel}
+                                    className="btn-ghost px-4 py-2 rounded text-xs">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {products.length === 0 ? (
+                <p className="text-[#737373] text-sm">No products yet.</p>
+            ) : (
+                <div className="space-y-2">
+                    {products.map(product => (
+                        <div key={product.id} className="product-row rounded-lg px-5 py-4 flex items-center justify-between gap-4">
+                            <div className="flex-1">
+                                <h2 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-sm text-[#f5f5f5] font-medium">
+                                    {product.name}
+                                </h2>
+                                <p className="text-xs text-[#737373] mt-1">{product.stock} in stock · ${product.price}</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <button onClick={() => handleEdit(product)}
+                                    className="text-xs text-[#737373] hover:text-[#f5f5f5] transition-colors">edit</button>
+                                <button onClick={() => handleDelete(product.id)}
+                                    className="text-xs text-[#3a3a3a] hover:text-red-400 transition-colors">delete</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </>
+    );
+}
+
+export default AdminProducts;
