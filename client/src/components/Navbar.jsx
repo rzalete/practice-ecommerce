@@ -40,7 +40,7 @@ function Navbar() {
             <div className="flex gap-6 items-center">
                 {token ? (
                     <>
-                        {role === 'admin' && navLink('/admin/products', 'Admin')}
+                        {role === 'admin' && navLink('/admin', 'Admin')}
                         {navLink('/cart', 'Cart')}
                         {navLink('/orders', 'Orders')}
                         <button
