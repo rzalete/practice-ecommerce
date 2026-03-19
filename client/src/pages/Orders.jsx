@@ -1,6 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
+
+const STATUS_STYLES = {
+    pending: { color: '#a3a3a3', bg: 'rgba(163,163,163,0.08)', label: 'Pending' },
+    processing: { color: '#60a5fa', bg: 'rgba(96,165,250,0.08)', label: 'Processing' },
+    shipped: { color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', label: 'Shipped' },
+    delivered: { color: '#34d399', bg: 'rgba(52,211,153,0.08)', label: 'Delivered' },
+    cancelled: { color: '#f87171', bg: 'rgba(248,113,113,0.08)', label: 'Cancelled' },
+};
+
+function StatusBadge({ status }) {
+    const s = STATUS_STYLES[status] || STATUS_STYLES.pending;
+    return (
+        <span style={{ color: s.color, background: s.bg, border: `1px solid ${s.color}22` }}
+            className="text-xs px-2 py-1 rounded">
+            {s.label}
+        </span>
+    );
+}
 
 function Orders() {
     const [orders, setOrders] = useState([]);
@@ -10,11 +28,14 @@ function Orders() {
     const token = localStorage.getItem('token');
 
     useEffect(() => {
-        if (!token) {
-            window.location.href = '/login';
-            return;
-        }
+        if (!token) { window.location.href = '/login'; return; }
         fetchOrders();
+    }, []);
+
+    useEffect(() => {
+        const handleEsc = (e) => { if (e.key === 'Escape') setSelectedOrder(null); };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
     }, []);
 
     const fetchOrders = async () => {
@@ -56,30 +77,19 @@ function Orders() {
     return (
         <div style={{ fontFamily: "'DM Mono', monospace" }} className="min-h-screen bg-[#0f0f0f] px-6 py-10">
             <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
-        .order-row {
-          background: #161616;
-          border: 1px solid #252525;
-          transition: border-color 0.2s;
-          cursor: pointer;
-        }
-        .order-row:hover { border-color: #3a3a3a; }
-        .order-detail {
-          background: #161616;
-          border: 1px solid #252525;
-        }
-        .close-btn {
-          color: #3a3a3a;
-          transition: color 0.2s;
-        }
-        .close-btn:hover { color: #f5f5f5; }
-      `}</style>
+                @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
+                .order-row { background: #161616; border: 1px solid #252525; transition: border-color 0.2s; cursor: pointer; }
+                .order-row:hover { border-color: #3a3a3a; }
+                .order-detail { background: #161616; border: 1px solid #252525; }
+                .timeline-line { border-left: 1px solid #252525; }
+            `}</style>
             <Navbar />
 
             <div className="max-w-2xl mx-auto mt-10">
                 <h1 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-xl font-light text-[#f5f5f5] mb-10">
                     Orders
                 </h1>
+
                 {orders.length === 0 ? (
                     <div className="text-center py-20">
                         <p className="text-[#737373] text-sm mb-4">No orders yet.</p>
@@ -90,11 +100,8 @@ function Orders() {
                 ) : (
                     <div className="space-y-3">
                         {orders.map(order => (
-                            <div
-                                key={order.id}
-                                className="order-row rounded-lg px-5 py-4"
-                                onClick={() => fetchOrderDetail(order.id)}
-                            >
+                            <div key={order.id} className="order-row rounded-lg px-5 py-4"
+                                onClick={() => fetchOrderDetail(order.id)}>
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-xs text-[#737373] mb-1">Order #{order.id}</p>
@@ -103,11 +110,9 @@ function Orders() {
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <span className="text-xs text-[#737373] border border-[#252525] px-2 py-1 rounded">
-                                            {order.status}
-                                        </span>
+                                        <StatusBadge status={order.status} />
                                         <p className="text-xs text-[#3a3a3a] mt-2">
-                                            {new Date(order.created_at).toLocaleDateString()}
+                                            {new Date(order.created_at).toLocaleDateString('en-GB')}
                                         </p>
                                     </div>
                                 </div>
@@ -118,18 +123,32 @@ function Orders() {
 
                 {/* Order Detail Modal */}
                 {selectedOrder && (
-                    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center px-4 z-50">
-                        <div className="order-detail rounded-lg p-6 w-full max-w-md">
+                    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center px-4 z-50"
+                        onClick={() => setSelectedOrder(null)}>
+                        <div className="order-detail rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto"
+                            onClick={e => e.stopPropagation()}>
+
+                            {/* Header */}
                             <div className="flex items-center justify-between mb-6">
-                                <h2 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-sm font-medium text-[#f5f5f5]">
-                                    Order #{selectedOrder.id}
-                                </h2>
-                                <button className="close-btn text-xs" onClick={() => setSelectedOrder(null)}>close</button>
+                                <div>
+                                    <h2 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-sm font-medium text-[#f5f5f5]">
+                                        Order #{selectedOrder.id}
+                                    </h2>
+                                    <p className="text-xs text-[#737373] mt-1">
+                                        {new Date(selectedOrder.created_at).toLocaleDateString('en-GB')}
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <StatusBadge status={selectedOrder.status} />
+                                    <button className="text-xs text-[#3a3a3a] hover:text-[#f5f5f5] transition-colors"
+                                        onClick={() => setSelectedOrder(null)}>close</button>
+                                </div>
                             </div>
 
+                            {/* Items */}
                             <div className="space-y-3 mb-6">
                                 {selectedOrder.items.map(item => (
-                                    <div key={item.id} className="flex items-center justify-between">
+                                    <div key={item.product_id} className="flex items-center justify-between">
                                         <div>
                                             <p className="text-sm text-[#f5f5f5]">{item.name}</p>
                                             <p className="text-xs text-[#737373]">x{item.quantity}</p>
@@ -141,12 +160,42 @@ function Orders() {
                                 ))}
                             </div>
 
-                            <div className="border-t border-[#252525] pt-4 flex items-center justify-between">
+                            {/* Total */}
+                            <div className="border-t border-[#252525] pt-4 flex items-center justify-between mb-6">
                                 <p className="text-xs text-[#737373]">Total</p>
                                 <p style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-sm text-[#f5f5f5]">
                                     ${parseFloat(selectedOrder.total_amount).toFixed(2)}
                                 </p>
                             </div>
+
+                            {/* Status History */}
+                            {selectedOrder.history?.length > 0 && (
+                                <div>
+                                    <p className="text-xs text-[#737373] mb-4">History</p>
+                                    <div className="space-y-4">
+                                        {selectedOrder.history.map((h, i) => {
+                                            const s = STATUS_STYLES[h.status] || STATUS_STYLES.pending;
+                                            return (
+                                                <div key={h.id} className="flex gap-3">
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="w-2 h-2 rounded-full mt-1 flex-shrink-0"
+                                                            style={{ background: s.color }} />
+                                                        {i < selectedOrder.history.length - 1 && (
+                                                            <div className="w-px flex-1 mt-1" style={{ background: '#252525' }} />
+                                                        )}
+                                                    </div>
+                                                    <div className="pb-4">
+                                                        <p className="text-xs" style={{ color: s.color }}>{s.label}</p>
+                                                        <p className="text-xs text-[#3a3a3a] mt-0.5">
+                                                            {new Date(h.changed_at).toLocaleString('en-GB')}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
