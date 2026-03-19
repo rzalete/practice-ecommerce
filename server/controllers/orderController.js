@@ -1,62 +1,62 @@
 const pool = require('../config/db');
 
-// Checkout - create order from cart
+const VALID_TRANSITIONS = {
+    pending: ['processing', 'cancelled'],
+    processing: ['shipped', 'cancelled'],
+    shipped: ['delivered'],
+    delivered: [],
+    cancelled: []
+};
+
 const checkout = async (req, res) => {
     const client = await pool.connect();
     try {
-        // Ambil semua item di cart user
         const cartItems = await client.query(
             `SELECT cart.*, products.price, products.stock 
-       FROM cart 
-       JOIN products ON cart.product_id = products.id
-       WHERE cart.user_id = $1`,
+             FROM cart 
+             JOIN products ON cart.product_id = products.id
+             WHERE cart.user_id = $1
+             FOR UPDATE`,
             [req.user.id]
         );
 
-        if (cartItems.rows.length === 0) {
+        if (cartItems.rows.length === 0)
             return res.status(400).json({ message: 'Cart is empty' });
-        }
 
-        // Hitung total amount
-        const totalAmount = cartItems.rows.reduce((sum, item) => {
-            return sum + item.price * item.quantity;
-        }, 0);
+        const totalAmount = cartItems.rows.reduce(
+            (sum, item) => sum + item.price * item.quantity, 0
+        );
 
         await client.query('BEGIN');
 
-        // Buat order baru
         const newOrder = await client.query(
-            'INSERT INTO orders (user_id, total_amount) VALUES ($1, $2) RETURNING *',
-            [req.user.id, totalAmount]
+            'INSERT INTO orders (user_id, total_amount, status) VALUES ($1, $2, $3) RETURNING *',
+            [req.user.id, totalAmount, 'pending']
         );
-
         const orderId = newOrder.rows[0].id;
 
-        // Masukkan setiap item cart ke order_items
         for (const item of cartItems.rows) {
-            // Cek stock
             if (item.stock < item.quantity) {
                 await client.query('ROLLBACK');
                 return res.status(400).json({ message: `Insufficient stock for product ${item.product_id}` });
             }
-
             await client.query(
                 'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)',
                 [orderId, item.product_id, item.quantity, item.price]
             );
-
-            // Kurangi stock produk
             await client.query(
                 'UPDATE products SET stock = stock - $1 WHERE id = $2',
                 [item.quantity, item.product_id]
             );
         }
 
-        // Kosongkan cart
+        await client.query(
+            'INSERT INTO order_status_history (order_id, status, changed_by) VALUES ($1, $2, $3)',
+            [orderId, 'pending', req.user.id]
+        );
+
         await client.query('DELETE FROM cart WHERE user_id = $1', [req.user.id]);
-
         await client.query('COMMIT');
-
         res.status(201).json(newOrder.rows[0]);
     } catch (err) {
         await client.query('ROLLBACK');
@@ -67,7 +67,6 @@ const checkout = async (req, res) => {
     }
 };
 
-// Get order history for logged in user
 const getOrders = async (req, res) => {
     try {
         const orders = await pool.query(
@@ -81,30 +80,40 @@ const getOrders = async (req, res) => {
     }
 };
 
-// Get single order detail
 const getOrder = async (req, res) => {
     const { id } = req.params;
     try {
-        const order = await pool.query(
-            'SELECT * FROM orders WHERE id = $1 AND user_id = $2',
-            [id, req.user.id]
-        );
+        const query = req.user.role === 'admin'
+            ? 'SELECT * FROM orders WHERE id = $1'
+            : 'SELECT * FROM orders WHERE id = $1 AND user_id = $2';
+        const params = req.user.role === 'admin' ? [id] : [id, req.user.id];
 
-        if (order.rows.length === 0) {
+        const order = await pool.query(query, params);
+        if (order.rows.length === 0)
             return res.status(404).json({ message: 'Order not found' });
-        }
 
-        const orderItems = await pool.query(
-            `SELECT order_items.*, products.name 
-       FROM order_items 
-       JOIN products ON order_items.product_id = products.id
-       WHERE order_items.order_id = $1`,
-            [id]
-        );
+        const [items, history] = await Promise.all([
+            pool.query(
+                `SELECT order_items.*, products.name 
+                 FROM order_items 
+                 JOIN products ON order_items.product_id = products.id
+                 WHERE order_items.order_id = $1`,
+                [id]
+            ),
+            pool.query(
+                `SELECT order_status_history.*, users.email as changed_by_email
+                 FROM order_status_history
+                 JOIN users ON order_status_history.changed_by = users.id
+                 WHERE order_id = $1 
+                 ORDER BY changed_at ASC`,
+                [id]
+            )
+        ]);
 
         res.status(200).json({
             ...order.rows[0],
-            items: orderItems.rows
+            items: items.rows,
+            history: history.rows
         });
     } catch (err) {
         console.error(err);
@@ -112,4 +121,59 @@ const getOrder = async (req, res) => {
     }
 };
 
-module.exports = { checkout, getOrders, getOrder };
+const updateOrderStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+        const order = await pool.query('SELECT * FROM orders WHERE id = $1', [id]);
+        if (order.rows.length === 0)
+            return res.status(404).json({ message: 'Order not found' });
+
+        const currentStatus = order.rows[0].status;
+        const allowed = VALID_TRANSITIONS[currentStatus];
+
+        if (!allowed.includes(status)) {
+            return res.status(400).json({
+                message: `Cannot transition from '${currentStatus}' to '${status}'`
+            });
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            await client.query('UPDATE orders SET status = $1 WHERE id = $2', [status, id]);
+            await client.query(
+                'INSERT INTO order_status_history (order_id, status, changed_by) VALUES ($1, $2, $3)',
+                [id, status, req.user.id]
+            );
+            await client.query('COMMIT');
+            res.status(200).json({ message: 'Status updated', status });
+        } catch (err) {
+            await client.query('ROLLBACK');
+            throw err;
+        } finally {
+            client.release();
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+const getAllOrders = async (req, res) => {
+    try {
+        const orders = await pool.query(
+            `SELECT orders.*, users.email 
+             FROM orders 
+             JOIN users ON orders.user_id = users.id
+             ORDER BY created_at DESC`
+        );
+        res.status(200).json(orders.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+module.exports = { checkout, getOrders, getOrder, updateOrderStatus, getAllOrders };
