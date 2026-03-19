@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Navbar from '../components/Navbar';
 
 function Orders() {
     const [orders, setOrders] = useState([]);
@@ -73,21 +74,12 @@ function Orders() {
         }
         .close-btn:hover { color: #f5f5f5; }
       `}</style>
+            <Navbar />
 
-            <div className="max-w-2xl mx-auto">
-                {/* Header */}
-                <div className="mb-10 flex items-end justify-between border-b border-[#1f1f1f] pb-6">
-                    <div>
-                        <span className="text-xs text-[#737373] tracking-[0.3em] uppercase">store.io</span>
-                        <h1 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-xl font-light text-[#f5f5f5] mt-2">
-                            Orders
-                        </h1>
-                    </div>
-                    <a href="/" className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide">
-                        Back
-                    </a>
-                </div>
-
+            <div className="max-w-2xl mx-auto mt-10">
+                <h1 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-xl font-light text-[#f5f5f5] mb-10">
+                    Orders
+                </h1>
                 {orders.length === 0 ? (
                     <div className="text-center py-20">
                         <p className="text-[#737373] text-sm mb-4">No orders yet.</p>

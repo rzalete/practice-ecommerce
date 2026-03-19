@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import Navbar from '../components/Navbar';
 
 const emptyForm = { name: '', description: '', price: '', stock: '', image_url: '' };
 
@@ -150,28 +151,20 @@ function AdminProducts() {
         .btn-danger:hover { color: #ef4444; }
       `}</style>
 
-            <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="mb-10 flex items-end justify-between border-b border-[#1f1f1f] pb-6">
-                    <div>
-                        <span className="text-xs text-[#737373] tracking-[0.3em] uppercase">store.io</span>
-                        <h1 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-xl font-light text-[#f5f5f5] mt-2">
-                            Manage Products
-                        </h1>
-                    </div>
-                    <div className="flex gap-4 items-center">
-                        <a href="/" className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors">
-                            Storefront
-                        </a>
-                        <button
-                            onClick={() => setShowForm(true)}
-                            className="btn-primary px-4 py-2 rounded text-xs font-medium tracking-wide"
-                        >
-                            + Add product
-                        </button>
-                    </div>
+            <Navbar />
+            
+            <div className="max-w-4xl mx-auto mt-10">
+                <div className="flex items-center justify-between mb-10">
+                    <h1 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-xl font-light text-[#f5f5f5]">
+                        Manage Products
+                    </h1>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        className="btn-primary px-4 py-2 rounded text-xs font-medium tracking-wide"
+                    >
+                        + Add product
+                    </button>
                 </div>
-
                 {/* Form Modal */}
                 {showForm && (
                     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center px-4 z-50">
