@@ -8,65 +8,6 @@ const VALID_TRANSITIONS = {
     cancelled: []
 };
 
-const checkout = async (req, res) => {
-    const client = await pool.connect();
-    try {
-        const cartItems = await client.query(
-            `SELECT cart.*, products.price, products.stock 
-             FROM cart 
-             JOIN products ON cart.product_id = products.id
-             WHERE cart.user_id = $1
-             FOR UPDATE`,
-            [req.user.id]
-        );
-
-        if (cartItems.rows.length === 0)
-            return res.status(400).json({ message: 'Cart is empty' });
-
-        const totalAmount = cartItems.rows.reduce(
-            (sum, item) => sum + item.price * item.quantity, 0
-        );
-
-        await client.query('BEGIN');
-
-        const newOrder = await client.query(
-            'INSERT INTO orders (user_id, total_amount, status) VALUES ($1, $2, $3) RETURNING *',
-            [req.user.id, totalAmount, 'pending']
-        );
-        const orderId = newOrder.rows[0].id;
-
-        for (const item of cartItems.rows) {
-            if (item.stock < item.quantity) {
-                await client.query('ROLLBACK');
-                return res.status(400).json({ message: `Insufficient stock for product ${item.product_id}` });
-            }
-            await client.query(
-                'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)',
-                [orderId, item.product_id, item.quantity, item.price]
-            );
-            await client.query(
-                'UPDATE products SET stock = stock - $1 WHERE id = $2',
-                [item.quantity, item.product_id]
-            );
-        }
-
-        await client.query(
-            'INSERT INTO order_status_history (order_id, status, changed_by) VALUES ($1, $2, $3)',
-            [orderId, 'pending', req.user.id]
-        );
-
-        await client.query('DELETE FROM cart WHERE user_id = $1', [req.user.id]);
-        await client.query('COMMIT');
-        res.status(201).json(newOrder.rows[0]);
-    } catch (err) {
-        await client.query('ROLLBACK');
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
-    } finally {
-        client.release();
-    }
-};
-
 const getOrders = async (req, res) => {
     try {
         const orders = await pool.query(
@@ -176,4 +117,4 @@ const getAllOrders = async (req, res) => {
     }
 };
 
-module.exports = { checkout, getOrders, getOrder, updateOrderStatus, getAllOrders };
+module.exports = { getOrders, getOrder, updateOrderStatus, getAllOrders };
