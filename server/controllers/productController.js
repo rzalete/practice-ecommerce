@@ -2,8 +2,43 @@ const pool = require('../config/db');
 
 // Get all products
 const getProducts = async (req, res) => {
+    const { search, minPrice, maxPrice, sort } = req.query;
+
     try {
-        const products = await pool.query('SELECT * FROM products');
+        const conditions = [];
+        const params = [];
+
+        if (search?.trim()) {
+            params.push(`%${search.trim()}%`);
+            conditions.push(`name ILIKE $${params.length}`);
+        }
+
+        const min = parseFloat(minPrice);
+        const max = parseFloat(maxPrice);
+
+        if (!isNaN(min)) {
+            params.push(min);
+            conditions.push(`price >= $${params.length}`);
+        }
+
+        if (!isNaN(max)) {
+            params.push(max);
+            conditions.push(`price <= $${params.length}`);
+        }
+
+        const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+        const orderBy = {
+            price_asc: 'ORDER BY price ASC',
+            price_desc: 'ORDER BY price DESC',
+            newest: 'ORDER BY created_at DESC',
+        }[sort] || 'ORDER BY created_at DESC';
+
+        const products = await pool.query(
+            `SELECT * FROM products ${where} ${orderBy}`,
+            params
+        );
+
         res.status(200).json(products.rows);
     } catch (err) {
         console.error(err);
