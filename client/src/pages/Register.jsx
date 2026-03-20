@@ -39,7 +39,6 @@ function Register() {
     return (
         <div style={{ fontFamily: "'DM Mono', monospace" }} className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
             <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
         .input-field {
           background: #111;
           border: 1px solid #222;

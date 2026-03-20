@@ -77,7 +77,6 @@ function Orders() {
     return (
         <div style={{ fontFamily: "'DM Mono', monospace" }} className="min-h-screen bg-[#0f0f0f] px-6 py-10">
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap');
                 .order-row { background: #161616; border: 1px solid #252525; transition: border-color 0.2s; cursor: pointer; }
                 .order-row:hover { border-color: #3a3a3a; }
                 .order-detail { background: #161616; border: 1px solid #252525; }
