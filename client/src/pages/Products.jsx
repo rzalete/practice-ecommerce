@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import Navbar from '../components/Navbar';
 
 function Products() {
@@ -22,7 +22,7 @@ function Products() {
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const res = await axios.get('/api/products');
+                const res = await api.get('/api/products');
                 setProducts(res.data);
             } catch (err) {
                 setError('Failed to load products');
@@ -39,7 +39,7 @@ function Products() {
             return;
         }
         try {
-            await axios.post('/api/cart', { product_id: productId, quantity: 1 }, {
+            await api.post('/api/cart', { product_id: productId, quantity: 1 }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setAddedId(productId);

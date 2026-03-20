@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import Navbar from '../components/Navbar';
 
 function Cart() {
@@ -18,7 +18,7 @@ function Cart() {
 
     const fetchCart = async () => {
         try {
-            const res = await axios.get('/api/cart', {
+            const res = await api.get('/api/cart', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setCart(res.data);
@@ -32,7 +32,7 @@ function Cart() {
     const updateQuantity = async (id, quantity) => {
         if (quantity < 1) return;
         try {
-            await axios.put(`/api/cart/${id}`, { quantity }, {
+            await api.put(`/api/cart/${id}`, { quantity }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchCart();
@@ -43,7 +43,7 @@ function Cart() {
 
     const removeItem = async (id) => {
         try {
-            await axios.delete(`/api/cart/${id}`, {
+            await api.delete(`/api/cart/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchCart();
@@ -54,7 +54,7 @@ function Cart() {
 
     const checkout = async () => {
         try {
-            await axios.post('/api/orders/checkout', {}, {
+            await api.post('/api/orders/checkout', {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             window.location.href = '/orders';
