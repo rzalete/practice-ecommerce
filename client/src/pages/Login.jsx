@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 function Login() {
     const [formData, setFormData] = useState({ email: '', password: '' });
@@ -14,7 +14,7 @@ function Login() {
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await axios.post('/api/auth/login', formData);
+            const res = await api.post('/api/auth/login', formData);
             localStorage.setItem('token', res.data.token);
             window.location.href = '/';
         } catch (err) {

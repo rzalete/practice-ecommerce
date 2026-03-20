@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 const emptyForm = { name: '', description: '', price: '', stock: '', image_url: '' };
 
@@ -16,7 +16,7 @@ function AdminProducts({ token }) {
 
     const fetchProducts = async () => {
         try {
-            const res = await axios.get('/api/products');
+            const res = await api.get('/api/products');
             setProducts(res.data);
         } catch {
             setError('Failed to load products');
@@ -30,11 +30,11 @@ function AdminProducts({ token }) {
         setFormError('');
         try {
             if (editingId) {
-                await axios.put(`/api/products/${editingId}`, formData, {
+                await api.put(`/api/products/${editingId}`, formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             } else {
-                await axios.post('/api/products', formData, {
+                await api.post('/api/products', formData, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
             }
@@ -63,7 +63,7 @@ function AdminProducts({ token }) {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this product?')) return;
         try {
-            await axios.delete(`/api/products/${id}`, {
+            await api.delete(`/api/products/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             fetchProducts();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 
 const STATUS_STYLES = {
     pending: { color: '#a3a3a3', bg: 'rgba(163,163,163,0.08)' },
@@ -37,7 +37,7 @@ function AdminOrders({ token }) {
 
     const fetchOrders = async () => {
         try {
-            const res = await axios.get('/api/orders/admin', {
+            const res = await api.get('/api/orders/admin', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setOrders(res.data);
@@ -51,7 +51,7 @@ function AdminOrders({ token }) {
     const updateStatus = async (orderId, newStatus) => {
         setUpdating(orderId);
         try {
-            await axios.patch(`/api/orders/${orderId}/status`,
+            await api.patch(`/api/orders/${orderId}/status`,
                 { status: newStatus },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

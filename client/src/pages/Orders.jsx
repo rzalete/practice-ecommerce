@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import Navbar from '../components/Navbar';
 
 const STATUS_STYLES = {
@@ -40,7 +40,7 @@ function Orders() {
 
     const fetchOrders = async () => {
         try {
-            const res = await axios.get('/api/orders', {
+            const res = await api.get('/api/orders', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setOrders(res.data);
@@ -53,7 +53,7 @@ function Orders() {
 
     const fetchOrderDetail = async (id) => {
         try {
-            const res = await axios.get(`/api/orders/${id}`, {
+            const res = await api.get(`/api/orders/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSelectedOrder(res.data);
