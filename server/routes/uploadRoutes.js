@@ -3,8 +3,8 @@ const router = express.Router();
 const { uploadImage } = require('../controllers/uploadController');
 const authMiddleware = require('../middleware/authMiddleware');
 const roleMiddleware = require('../middleware/roleMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+const handleUpload = require('../middleware/uploadMiddleware');
 
-router.post('/', authMiddleware, roleMiddleware('admin'), upload.single('image'), uploadImage);
+router.post('/', authMiddleware, roleMiddleware('admin'), handleUpload, uploadImage);
 
 module.exports = router;
