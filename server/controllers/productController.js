@@ -2,7 +2,7 @@ const pool = require('../config/db');
 
 // Get all products
 const getProducts = async (req, res) => {
-    const { search, minPrice, maxPrice, sort } = req.query;
+    const { search, minPrice, maxPrice, sort, page = 1, limit = 12 } = req.query;
 
     try {
         const conditions = [];
@@ -34,12 +34,33 @@ const getProducts = async (req, res) => {
             newest: 'ORDER BY created_at DESC',
         }[sort] || 'ORDER BY created_at DESC';
 
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
+        // Query total count untuk pagination info
+        const countResult = await pool.query(
+            `SELECT COUNT(*) FROM products ${where}`,
+            params
+        );
+        const total = parseInt(countResult.rows[0].count);
+
+        // Query products dengan limit dan offset
+        params.push(parseInt(limit));
+        params.push(offset);
+
         const products = await pool.query(
-            `SELECT * FROM products ${where} ${orderBy}`,
+            `SELECT * FROM products ${where} ${orderBy} LIMIT $${params.length - 1} OFFSET $${params.length}`,
             params
         );
 
-        res.status(200).json(products.rows);
+        res.status(200).json({
+            products: products.rows,
+            pagination: {
+                total,
+                page: parseInt(page),
+                limit: parseInt(limit),
+                totalPages: Math.ceil(total / parseInt(limit))
+            }
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
