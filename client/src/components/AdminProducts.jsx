@@ -21,7 +21,7 @@ function AdminProducts({ token }) {
     const fetchProducts = async () => {
         try {
             const res = await api.get('/api/products');
-            setProducts(res.data);
+            setProducts(res.data.products);
         } catch {
             setError('Failed to load products');
         } finally {

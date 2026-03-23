@@ -7,20 +7,28 @@ function Products() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [addedId, setAddedId] = useState(null);
+    const [cartError, setCartError] = useState({ id: null, message: '' });
     const [search, setSearch] = useState('');
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [sort, setSort] = useState('newest');
-    const [cartError, setCartError] = useState({ id: null, message: '' });
+    const [page, setPage] = useState(1);
+    const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
+    const cartErrorTimeout = useRef(null);
     const token = localStorage.getItem('token');
 
+    // Reset page ke 1 saat filter berubah
+    useEffect(() => {
+        setPage(1);
+    }, [search, minPrice, maxPrice, sort]);
+
+    // Fetch products saat page atau filter berubah
     useEffect(() => {
         const delay = setTimeout(() => {
             fetchProducts();
         }, 300);
-
         return () => clearTimeout(delay);
-    }, [search, minPrice, maxPrice, sort]);
+    }, [search, minPrice, maxPrice, sort, page]);
 
     const fetchProducts = async () => {
         try {
@@ -29,17 +37,18 @@ function Products() {
             if (minPrice) params.append('minPrice', minPrice);
             if (maxPrice) params.append('maxPrice', maxPrice);
             if (sort) params.append('sort', sort);
+            params.append('page', page);
+            params.append('limit', 2);
 
             const res = await api.get(`/api/products?${params.toString()}`);
-            setProducts(res.data);
+            setProducts(res.data.products);
+            setPagination(res.data.pagination);
         } catch (err) {
             setError('Failed to load products');
         } finally {
             setLoading(false);
         }
     };
-
-    const cartErrorTimeout = useRef(null);
 
     const addToCart = async (productId) => {
         if (!token) { window.location.href = '/login'; return; }
@@ -83,12 +92,8 @@ function Products() {
                 .filter-select { background: #161616; border: 1px solid #252525; color: #a3a3a3; font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 10px; border-radius: 6px; outline: none; cursor: pointer; transition: border-color 0.2s; }
                 .filter-select:focus { border-color: #3a3a3a; }
                 input[type=number]::-webkit-inner-spin-button,
-                input[type=number]::-webkit-outer-spin-button {
-                    -webkit-appearance: none;
-                    margin: 0;
-                }
+                input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
                 input[type=number] { -moz-appearance: textfield; }
-                .qty-btn:disabled { opacity: 0.4; cursor: not-allowed; }
             `}</style>
 
             <Navbar />
@@ -98,48 +103,25 @@ function Products() {
                     <h1 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-xl font-light text-[#f5f5f5]">
                         All Products
                     </h1>
-                    <p className="text-xs text-[#737373]">{products.length} products</p>
+                    <p className="text-xs text-[#737373]">{pagination.total} products</p>
                 </div>
 
                 {/* Filters */}
                 <div className="mb-8 space-y-3">
-                    {/* Search */}
                     <div className="relative">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3a3a3a] text-xs">⌕</span>
-                        <input
-                            type="text"
-                            className="filter-input w-full pl-8"
-                            placeholder="Search products..."
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                        />
+                        <input type="text" className="filter-input w-full pl-8" placeholder="Search products..."
+                            value={search} onChange={e => setSearch(e.target.value)} />
                     </div>
-
-                    {/* Price & Sort */}
                     <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2">
-                            <input
-                                type="number"
-                                className="filter-input w-24"
-                                placeholder="Min"
-                                value={minPrice}
-                                onChange={e => setMinPrice(e.target.value)}
-                            />
+                            <input type="number" className="filter-input w-24" placeholder="Min"
+                                value={minPrice} onChange={e => setMinPrice(e.target.value)} />
                             <span className="text-xs text-[#3a3a3a]">—</span>
-                            <input
-                                type="number"
-                                className="filter-input w-24"
-                                placeholder="Max"
-                                value={maxPrice}
-                                onChange={e => setMaxPrice(e.target.value)}
-                            />
+                            <input type="number" className="filter-input w-24" placeholder="Max"
+                                value={maxPrice} onChange={e => setMaxPrice(e.target.value)} />
                         </div>
-
-                        <select
-                            className="filter-select ml-auto"
-                            value={sort}
-                            onChange={e => setSort(e.target.value)}
-                        >
+                        <select className="filter-select ml-auto" value={sort} onChange={e => setSort(e.target.value)}>
                             <option value="newest">Newest</option>
                             <option value="price_asc">Price: Low to High</option>
                             <option value="price_desc">Price: High to Low</option>
@@ -170,7 +152,7 @@ function Products() {
                                 <button onClick={() => addToCart(product.id)}
                                     disabled={product.stock === 0}
                                     className={`add-btn w-full py-2 rounded text-xs tracking-wide ${addedId === product.id ? 'added' : ''
-                                        } ${product.stock === 0 ? 'opacity-40' : ''}`}>
+                                        } ${product.stock === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}>
                                     {product.stock === 0 ? 'Out of stock' : addedId === product.id ? 'Added ✓' : 'Add to cart'}
                                 </button>
                                 {cartError.id === product.id && (
@@ -178,6 +160,29 @@ function Products() {
                                 )}
                             </div>
                         ))}
+                    </div>
+                )}
+
+                {/* Pagination */}
+                {pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-10">
+                        <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
+                            className="text-xs text-[#737373] border border-[#252525] px-3 py-1.5 rounded hover:text-[#f5f5f5] hover:border-[#3a3a3a] transition-colors disabled:opacity-40">
+                            ←
+                        </button>
+                        {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(p => (
+                            <button key={p} onClick={() => setPage(p)}
+                                className={`text-xs px-3 py-1.5 rounded border transition-colors ${p === page
+                                        ? 'text-[#f5f5f5] border-[#3a3a3a] bg-[#1f1f1f]'
+                                        : 'text-[#737373] border-[#252525] hover:text-[#f5f5f5] hover:border-[#3a3a3a]'
+                                    }`}>
+                                {p}
+                            </button>
+                        ))}
+                        <button onClick={() => setPage(p => p + 1)} disabled={page === pagination.totalPages}
+                            className="text-xs text-[#737373] border border-[#252525] px-3 py-1.5 rounded hover:text-[#f5f5f5] hover:border-[#3a3a3a] transition-colors disabled:opacity-40">
+                            →
+                        </button>
                     </div>
                 )}
             </div>
