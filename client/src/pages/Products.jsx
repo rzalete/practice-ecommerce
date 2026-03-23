@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 
@@ -11,6 +11,7 @@ function Products() {
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [sort, setSort] = useState('newest');
+    const [cartError, setCartError] = useState({ id: null, message: '' });
     const token = localStorage.getItem('token');
 
     useEffect(() => {
@@ -38,6 +39,8 @@ function Products() {
         }
     };
 
+    const cartErrorTimeout = useRef(null);
+
     const addToCart = async (productId) => {
         if (!token) { window.location.href = '/login'; return; }
         try {
@@ -45,9 +48,12 @@ function Products() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setAddedId(productId);
+            setCartError({ id: null, message: '' });
             setTimeout(() => setAddedId(null), 1500);
         } catch (err) {
-            alert('Failed to add to cart');
+            setCartError({ id: productId, message: err.response?.data?.message || 'Failed to add to cart' });
+            if (cartErrorTimeout.current) clearTimeout(cartErrorTimeout.current);
+            cartErrorTimeout.current = setTimeout(() => setCartError({ id: null, message: '' }), 3000);
         }
     };
 
@@ -82,6 +88,7 @@ function Products() {
                     margin: 0;
                 }
                 input[type=number] { -moz-appearance: textfield; }
+                .qty-btn:disabled { opacity: 0.4; cursor: not-allowed; }
             `}</style>
 
             <Navbar />
@@ -161,9 +168,14 @@ function Products() {
                                     <span className="text-sm text-[#a3a3a3] font-medium">${product.price}</span>
                                 </div>
                                 <button onClick={() => addToCart(product.id)}
-                                    className={`add-btn w-full py-2 rounded text-xs tracking-wide ${addedId === product.id ? 'added' : ''}`}>
-                                    {addedId === product.id ? 'Added ✓' : 'Add to cart'}
+                                    disabled={product.stock === 0}
+                                    className={`add-btn w-full py-2 rounded text-xs tracking-wide ${addedId === product.id ? 'added' : ''
+                                        } ${product.stock === 0 ? 'opacity-40' : ''}`}>
+                                    {product.stock === 0 ? 'Out of stock' : addedId === product.id ? 'Added ✓' : 'Add to cart'}
                                 </button>
+                                {cartError.id === product.id && (
+                                    <p className="text-xs text-red-400 mt-2 text-center">{cartError.message}</p>
+                                )}
                             </div>
                         ))}
                     </div>

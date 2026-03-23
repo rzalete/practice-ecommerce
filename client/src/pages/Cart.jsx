@@ -188,7 +188,19 @@ function Cart() {
                                     <div className="flex items-center gap-2">
                                         <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
                                         <span className="text-sm text-[#f5f5f5] w-6 text-center">{item.quantity}</span>
-                                        <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                                        <div className="relative group">
+                                            <button
+                                                className="qty-btn"
+                                                disabled={item.quantity >= item.stock}
+                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}>
+                                                +
+                                            </button>
+                                            {item.quantity >= item.stock && (
+                                                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 text-xs text-[#737373] whitespace-nowrap bg-[#1f1f1f] border border-[#252525] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    Max stock reached
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm text-[#a3a3a3] mb-1">${parseFloat(item.total).toFixed(2)}</p>
