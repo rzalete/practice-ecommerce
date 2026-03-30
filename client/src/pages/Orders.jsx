@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import { X, Package } from 'lucide-react';
 
 const STATUS_STYLES = {
     pending: { color: '#a3a3a3', bg: 'rgba(163,163,163,0.08)', label: 'Pending' },
@@ -91,6 +92,7 @@ function Orders() {
 
                 {orders.length === 0 ? (
                     <div className="text-center py-20">
+                        <Package size={32} className="text-[#3a3a3a] mx-auto mb-4" />
                         <p className="text-[#737373] text-sm mb-4">No orders yet.</p>
                         <a href="/" className="text-xs text-[#a3a3a3] hover:text-[#f5f5f5] transition-colors">
                             Browse products →
@@ -139,8 +141,10 @@ function Orders() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <StatusBadge status={selectedOrder.status} />
-                                    <button className="text-xs text-[#3a3a3a] hover:text-[#f5f5f5] transition-colors"
-                                        onClick={() => setSelectedOrder(null)}>close</button>
+                                    <button className="text-[#3a3a3a] hover:text-[#f5f5f5] transition-colors"
+                                        onClick={() => setSelectedOrder(null)}>
+                                        <X size={14} />
+                                    </button>
                                 </div>
                             </div>
 

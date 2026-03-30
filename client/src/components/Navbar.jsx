@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ShoppingCart, Package, Settings, LogOut } from 'lucide-react';
 
 function Navbar() {
     const [role, setRole] = useState(null);
@@ -21,10 +22,11 @@ function Navbar() {
         window.location.href = '/';
     };
 
-    const navLink = (href, label) => {
+    const navLink = (href, icon, label) => {
         const isActive = currentPath === href;
         return (
-            <a href={href} className={`text-xs tracking-wide transition-colors ${isActive ? 'text-[#f5f5f5]' : 'text-[#737373] hover:text-[#a3a3a3]'}`}>
+            <a href={href} className={`flex items-center gap-1.5 text-xs tracking-wide transition-colors ${isActive ? 'text-[#f5f5f5]' : 'text-[#737373] hover:text-[#a3a3a3]'}`}>
+                {icon}
                 {label}
             </a>
         );
@@ -40,18 +42,17 @@ function Navbar() {
             <div className="flex gap-6 items-center">
                 {token ? (
                     <>
-                        {role === 'admin' && navLink('/admin', 'Admin')}
-                        {navLink('/cart', 'Cart')}
-                        {navLink('/orders', 'Orders')}
-                        <button
-                            onClick={handleSignOut}
-                            className="text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide"
-                        >
+                        {role === 'admin' && navLink('/admin', <Settings size={13} />, 'Admin')}
+                        {navLink('/cart', <ShoppingCart size={13} />, 'Cart')}
+                        {navLink('/orders', <Package size={13} />, 'Orders')}
+                        <button onClick={handleSignOut}
+                            className="flex items-center gap-1.5 text-xs text-[#737373] hover:text-[#a3a3a3] transition-colors tracking-wide">
+                            <LogOut size={13} />
                             Sign out
                         </button>
                     </>
                 ) : (
-                    navLink('/login', 'Sign in')
+                    navLink('/login', null, 'Sign in')
                 )}
             </div>
         </div>

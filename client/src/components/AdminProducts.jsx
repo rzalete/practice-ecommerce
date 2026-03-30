@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import { Plus, Pencil, Trash2, Upload } from 'lucide-react';
 
 const emptyForm = { name: '', description: '', price: '', stock: '', image_url: '' };
 
@@ -127,8 +128,9 @@ function AdminProducts({ token }) {
             <div className="flex items-center justify-between mb-6">
                 <p className="text-xs text-[#737373]">{products.length} products</p>
                 <button onClick={() => setShowForm(true)}
-                    className="btn-primary px-4 py-2 rounded text-xs font-medium tracking-wide">
-                    + Add product
+                    className="btn-primary px-4 py-2 rounded text-xs font-medium tracking-wide flex items-center gap-1.5">
+                    <Plus size={13} />
+                    Add product
                 </button>
             </div>
 
@@ -172,9 +174,9 @@ function AdminProducts({ token }) {
                                 )}
                                 <input type="file" accept="image/jpeg,image/png,image/webp"
                                     ref={fileInputRef} onChange={handleImageChange} className="hidden" />
-                                <button type="button"
-                                    onClick={() => fileInputRef.current.click()}
-                                    className="btn-ghost w-full py-2 rounded text-xs">
+                                <button type="button" onClick={() => fileInputRef.current.click()}
+                                    className="btn-ghost w-full py-2 rounded text-xs flex items-center justify-center gap-1.5">
+                                    <Upload size={13} />
                                     {imagePreview ? 'Change image' : 'Upload image'}
                                 </button>
                             </div>
@@ -216,9 +218,13 @@ function AdminProducts({ token }) {
                             </div>
                             <div className="flex gap-4">
                                 <button onClick={() => handleEdit(product)}
-                                    className="text-xs text-[#737373] hover:text-[#f5f5f5] transition-colors">edit</button>
+                                    className="text-[#737373] hover:text-[#f5f5f5] transition-colors">
+                                    <Pencil size={13} />
+                                </button>
                                 <button onClick={() => handleDelete(product.id)}
-                                    className="text-xs text-[#3a3a3a] hover:text-red-400 transition-colors">delete</button>
+                                    className="text-[#3a3a3a] hover:text-red-400 transition-colors">
+                                    <Trash2 size={13} />
+                                </button>
                             </div>
                         </div>
                     ))}
