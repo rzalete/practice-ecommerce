@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import api from '../services/api';
+import { Eye, EyeOff } from 'lucide-react';
 
 function Register() {
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
@@ -131,9 +132,8 @@ function Register() {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#444] hover:text-[#888] transition-colors text-xs"
-                            >
-                                {showPassword ? 'hide' : 'show'}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#444] hover:text-[#888] transition-colors">
+                                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                             </button>
                         </div>
                         {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}

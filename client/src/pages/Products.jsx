@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
+import { Search, ShoppingCart, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 
 function Products() {
     const [products, setProducts] = useState([]);
@@ -38,7 +39,7 @@ function Products() {
             if (maxPrice) params.append('maxPrice', maxPrice);
             if (sort) params.append('sort', sort);
             params.append('page', page);
-            params.append('limit', 2);
+            params.append('limit', 12);
 
             const res = await api.get(`/api/products?${params.toString()}`);
             setProducts(res.data.products);
@@ -86,7 +87,7 @@ function Products() {
                 .add-btn { background: transparent; border: 1px solid #2a2a2a; color: #737373; transition: all 0.2s; }
                 .add-btn:hover { border-color: #a3a3a3; color: #f5f5f5; }
                 .add-btn.added { border-color: #a3a3a3; color: #a3a3a3; }
-                .filter-input { background: #161616; border: 1px solid #252525; color: #a3a3a3; font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 10px; border-radius: 6px; outline: none; transition: border-color 0.2s; }
+                .filter-input { background: #161616; border: 1px solid #252525; color: #a3a3a3; font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 10px 6px 28px; border-radius: 6px; outline: none; transition: border-color 0.2s; }
                 .filter-input::placeholder { color: #3a3a3a; }
                 .filter-input:focus { border-color: #3a3a3a; }
                 .filter-select { background: #161616; border: 1px solid #252525; color: #a3a3a3; font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 10px; border-radius: 6px; outline: none; cursor: pointer; transition: border-color 0.2s; }
@@ -109,8 +110,8 @@ function Products() {
                 {/* Filters */}
                 <div className="mb-8 space-y-3">
                     <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3a3a3a] text-xs">⌕</span>
-                        <input type="text" className="filter-input w-full pl-8" placeholder="Search products..."
+                        <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3a3a3a] pointer-events-none" />
+                        <input type="text" className="filter-input w-full" placeholder="Search products..."
                             value={search} onChange={e => setSearch(e.target.value)} />
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
@@ -151,9 +152,12 @@ function Products() {
                                 </div>
                                 <button onClick={() => addToCart(product.id)}
                                     disabled={product.stock === 0}
-                                    className={`add-btn w-full py-2 rounded text-xs tracking-wide ${addedId === product.id ? 'added' : ''
+                                    className={`add-btn w-full py-2 rounded text-xs tracking-wide flex items-center justify-center gap-1.5 ${addedId === product.id ? 'added' : ''
                                         } ${product.stock === 0 ? 'opacity-40 cursor-not-allowed' : ''}`}>
-                                    {product.stock === 0 ? 'Out of stock' : addedId === product.id ? 'Added ✓' : 'Add to cart'}
+                                    {product.stock === 0 ? 'Out of stock' : addedId === product.id
+                                        ? <><Check size={12} /> Added</>
+                                        : <><ShoppingCart size={12} /> Add to cart</>
+                                    }
                                 </button>
                                 {cartError.id === product.id && (
                                     <p className="text-xs text-red-400 mt-2 text-center">{cartError.message}</p>
@@ -167,21 +171,21 @@ function Products() {
                 {pagination.totalPages > 1 && (
                     <div className="flex items-center justify-center gap-2 mt-10">
                         <button onClick={() => setPage(p => p - 1)} disabled={page === 1}
-                            className="text-xs text-[#737373] border border-[#252525] px-3 py-1.5 rounded hover:text-[#f5f5f5] hover:border-[#3a3a3a] transition-colors disabled:opacity-40">
-                            ←
+                            className="text-[#737373] border border-[#252525] p-1.5 rounded hover:text-[#f5f5f5] hover:border-[#3a3a3a] transition-colors disabled:opacity-40">
+                            <ChevronLeft size={14} />
                         </button>
                         {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(p => (
                             <button key={p} onClick={() => setPage(p)}
                                 className={`text-xs px-3 py-1.5 rounded border transition-colors ${p === page
-                                        ? 'text-[#f5f5f5] border-[#3a3a3a] bg-[#1f1f1f]'
-                                        : 'text-[#737373] border-[#252525] hover:text-[#f5f5f5] hover:border-[#3a3a3a]'
+                                    ? 'text-[#f5f5f5] border-[#3a3a3a] bg-[#1f1f1f]'
+                                    : 'text-[#737373] border-[#252525] hover:text-[#f5f5f5] hover:border-[#3a3a3a]'
                                     }`}>
                                 {p}
                             </button>
                         ))}
                         <button onClick={() => setPage(p => p + 1)} disabled={page === pagination.totalPages}
-                            className="text-xs text-[#737373] border border-[#252525] px-3 py-1.5 rounded hover:text-[#f5f5f5] hover:border-[#3a3a3a] transition-colors disabled:opacity-40">
-                            →
+                            className="text-[#737373] border border-[#252525] p-1.5 rounded hover:text-[#f5f5f5] hover:border-[#3a3a3a] transition-colors disabled:opacity-40">
+                            <ChevronRight size={14} />
                         </button>
                     </div>
                 )}

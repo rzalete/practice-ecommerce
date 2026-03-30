@@ -3,6 +3,7 @@ import api from '../services/api';
 import Navbar from '../components/Navbar';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { Minus, Plus, Trash2, CheckCircle } from 'lucide-react';
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
@@ -186,14 +187,14 @@ function Cart() {
                                         <p className="text-xs text-[#a3a3a3]">${item.price} each</p>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}>−</button>
+                                        <button className="qty-btn" onClick={() => updateQuantity(item.id, item.quantity - 1)}> <Minus size={12} /> </button>
                                         <span className="text-sm text-[#f5f5f5] w-6 text-center">{item.quantity}</span>
                                         <div className="relative group">
                                             <button
                                                 className="qty-btn"
                                                 disabled={item.quantity >= item.stock}
                                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}>
-                                                +
+                                                <Plus size={12} />
                                             </button>
                                             {item.quantity >= item.stock && (
                                                 <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 text-xs text-[#737373] whitespace-nowrap bg-[#1f1f1f] border border-[#252525] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
@@ -204,7 +205,7 @@ function Cart() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-sm text-[#a3a3a3] mb-1">${parseFloat(item.total).toFixed(2)}</p>
-                                        <button className="remove-btn" onClick={() => removeItem(item.id)}>remove</button>
+                                        <button className="remove-btn" onClick={() => removeItem(item.id)}> <Trash2 size={13} /></button>
                                     </div>
                                 </div>
                             ))}
@@ -262,7 +263,7 @@ function Cart() {
             {showSuccess && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center px-4 z-50">
                     <div className="bg-[#161616] border border-[#252525] rounded-lg p-8 w-full max-w-sm text-center">
-                        <p className="text-2xl mb-4 text-green-500">✓</p>
+                        <p className="text-2xl mb-4 text-green-500"><CheckCircle size={32} className="text-green-500 mx-auto mb-4" /></p>
                         <h2 style={{ fontFamily: "'DM Sans', sans-serif" }} className="text-sm font-medium text-[#f5f5f5] mb-2">
                             Payment successful
                         </h2>
