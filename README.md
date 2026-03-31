@@ -101,3 +101,5 @@ Frontend runs on `http://localhost:3000`
 | POST | `/api/payment/create-intent` | Create payment intent | User |
 | POST | `/api/payment/confirm-order` | Confirm order | User |
 | POST | `/api/upload` | Upload image | Admin |
+
+**Live Demo:** https://practice-ecommerce-delta.vercel.app
