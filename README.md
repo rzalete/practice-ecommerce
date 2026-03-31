@@ -60,6 +60,7 @@ STRIPE_SECRET_KEY=sk_test_...
 **`client/.env`**
 ```
 REACT_APP_STRIPE_PUBLISHABLE_KEY=pk_test_...
+REACT_APP_API_URL=your_railway_backend_url
 ```
 
 ### Database Setup
