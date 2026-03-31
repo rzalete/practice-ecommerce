@@ -65,6 +65,8 @@ function Products() {
         }
     };
 
+    console.log('API URL:', process.env.REACT_APP_API_URL);
+
     if (loading) return (
         <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
             <p className="text-[#737373] text-sm tracking-wide">Loading...</p>
