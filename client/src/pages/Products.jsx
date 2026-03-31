@@ -18,19 +18,6 @@ function Products() {
     const cartErrorTimeout = useRef(null);
     const token = localStorage.getItem('token');
 
-    // Reset page ke 1 saat filter berubah
-    useEffect(() => {
-        setPage(1);
-    }, [search, minPrice, maxPrice, sort]);
-
-    // Fetch products saat page atau filter berubah
-    useEffect(() => {
-        const delay = setTimeout(() => {
-            fetchProducts();
-        }, 300);
-        return () => clearTimeout(delay);
-    }, [fetchProducts]);
-
     const fetchProducts = useCallback(async () => {
         try {
             const params = new URLSearchParams();
@@ -50,6 +37,17 @@ function Products() {
             setLoading(false);
         }
     }, [search, minPrice, maxPrice, sort, page]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, minPrice, maxPrice, sort]);
+
+    useEffect(() => {
+        const delay = setTimeout(() => {
+            fetchProducts();
+        }, 300);
+        return () => clearTimeout(delay);
+    }, [fetchProducts]);
 
     const addToCart = async (productId) => {
         if (!token) { window.location.href = '/login'; return; }

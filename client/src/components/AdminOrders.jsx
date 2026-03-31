@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 
 const STATUS_STYLES = {
@@ -33,9 +33,7 @@ function AdminOrders({ token }) {
     const [error, setError] = useState('');
     const [updating, setUpdating] = useState(null);
 
-    useEffect(() => { fetchOrders(); }, []);
-
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         try {
             const res = await api.get('/api/orders/admin', {
                 headers: { Authorization: `Bearer ${token}` }
@@ -46,7 +44,9 @@ function AdminOrders({ token }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
+
+    useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
     const updateStatus = async (orderId, newStatus) => {
         setUpdating(orderId);

@@ -67,11 +67,6 @@ function Cart() {
     const [showSuccess, setShowSuccess] = useState(false);
     const token = localStorage.getItem('token');
 
-    useEffect(() => {
-        if (!token) { window.location.href = '/login'; return; }
-        fetchCart();
-    }, [token, fetchCart]);
-
     const fetchCart = useCallback(async () => {
         try {
             const res = await api.get('/api/cart', {
@@ -84,6 +79,11 @@ function Cart() {
             setLoading(false);
         }
     }, [token]);
+
+    useEffect(() => {
+        if (!token) { window.location.href = '/login'; return; }
+        fetchCart();
+    }, [token, fetchCart]);
 
     const updateQuantity = async (id, quantity) => {
         if (quantity < 1) return;

@@ -12,7 +12,6 @@ function AdminProducts({ token }) {
     const [editingId, setEditingId] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [formError, setFormError] = useState('');
-    const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState('');
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
@@ -94,7 +93,6 @@ function AdminProducts({ token }) {
             image_url: product.image_url || ''
         });
         setImagePreview(product.image_url || '');
-        setImageFile(null);
         setEditingId(product.id);
         setShowForm(true);
     };
@@ -116,7 +114,6 @@ function AdminProducts({ token }) {
         setEditingId(null);
         setShowForm(false);
         setFormError('');
-        setImageFile(null);
         setImagePreview('');
     };
 

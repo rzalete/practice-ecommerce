@@ -28,16 +28,6 @@ function Orders() {
     const [error, setError] = useState('');
     const token = localStorage.getItem('token');
 
-    useEffect(() => {
-        if (!token) { window.location.href = '/login'; return; }
-        fetchOrders();
-    }, []);
-
-    useEffect(() => {
-        if (!token) { window.location.href = '/login'; return; }
-        fetchOrders();
-    }, [token, fetchOrders]);
-
     const fetchOrders = useCallback(async () => {
         try {
             const res = await api.get('/api/orders', {
@@ -50,6 +40,17 @@ function Orders() {
             setLoading(false);
         }
     }, [token]);
+
+    useEffect(() => {
+        if (!token) { window.location.href = '/login'; return; }
+        fetchOrders();
+    }, [token, fetchOrders]);
+
+    useEffect(() => {
+        const handleEsc = (e) => { if (e.key === 'Escape') setSelectedOrder(null); };
+        window.addEventListener('keydown', handleEsc);
+        return () => window.removeEventListener('keydown', handleEsc);
+    }, []);
 
     const fetchOrderDetail = async (id) => {
         try {
