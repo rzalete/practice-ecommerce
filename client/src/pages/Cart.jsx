@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 import { loadStripe } from '@stripe/stripe-js';
@@ -70,9 +70,9 @@ function Cart() {
     useEffect(() => {
         if (!token) { window.location.href = '/login'; return; }
         fetchCart();
-    }, []);
+    }, [token, fetchCart]);
 
-    const fetchCart = async () => {
+    const fetchCart = useCallback(async () => {
         try {
             const res = await api.get('/api/cart', {
                 headers: { Authorization: `Bearer ${token}` }
@@ -83,7 +83,7 @@ function Cart() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
     const updateQuantity = async (id, quantity) => {
         if (quantity < 1) return;

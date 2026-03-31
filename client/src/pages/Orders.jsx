@@ -34,12 +34,11 @@ function Orders() {
     }, []);
 
     useEffect(() => {
-        const handleEsc = (e) => { if (e.key === 'Escape') setSelectedOrder(null); };
-        window.addEventListener('keydown', handleEsc);
-        return () => window.removeEventListener('keydown', handleEsc);
-    }, []);
+        if (!token) { window.location.href = '/login'; return; }
+        fetchOrders();
+    }, [token, fetchOrders]);
 
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         try {
             const res = await api.get('/api/orders', {
                 headers: { Authorization: `Bearer ${token}` }
@@ -50,7 +49,7 @@ function Orders() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token]);
 
     const fetchOrderDetail = async (id) => {
         try {

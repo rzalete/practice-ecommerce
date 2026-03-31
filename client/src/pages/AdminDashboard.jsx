@@ -15,7 +15,7 @@ function AdminDashboard() {
         } catch {
             window.location.href = '/';
         }
-    }, []);
+    }, [token]);
 
     return (
         <div style={{ fontFamily: "'DM Mono', monospace" }} className="min-h-screen bg-[#0f0f0f] px-6 py-10">

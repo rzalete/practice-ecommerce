@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import Navbar from '../components/Navbar';
 import { Search, ShoppingCart, Check, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -29,9 +29,9 @@ function Products() {
             fetchProducts();
         }, 300);
         return () => clearTimeout(delay);
-    }, [search, minPrice, maxPrice, sort, page]);
+    }, [fetchProducts]);
 
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         try {
             const params = new URLSearchParams();
             if (search) params.append('search', search);
@@ -49,7 +49,7 @@ function Products() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [search, minPrice, maxPrice, sort, page]);
 
     const addToCart = async (productId) => {
         if (!token) { window.location.href = '/login'; return; }
